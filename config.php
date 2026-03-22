@@ -8,18 +8,33 @@ mysqli_report(MYSQLI_REPORT_OFF);
 $host = getenv('DB_HOST') ?: (getenv('MYSQLHOST') ?: "localhost");
 $username = getenv('DB_USER') ?: (getenv('MYSQLUSER') ?: "root");
 $password = getenv('DB_PASS') ?: (getenv('MYSQLPASSWORD') ?: "123223");
-$dbname = getenv('DB_NAME') ?: (getenv('MYSQLDATABASE') ?: "db_kasir");
 
 $host = trim($host, " \t\n\r\0\x0B\"'");
 $username = trim($username, " \t\n\r\0\x0B\"'");
+
+$isRailwayHost = stripos($host, 'railway') !== false;
+$dbname = getenv('DB_NAME') ?: (getenv('MYSQLDATABASE') ?: ($isRailwayHost ? '' : 'db_kasir'));
 $dbname = trim($dbname, " \t\n\r\0\x0B\"'");
 
 if (strpos($host, '${{') !== false || strpos($host, 'RAILWAY_PRIVATE_DOMAIN') !== false) {
     error_log("[ERROR] Invalid DB_HOST placeholder detected: {$host}");
     http_response_code(503);
-    header('Content-Type: text/plain');
+    if (!headers_sent()) {
+        header('Content-Type: text/plain');
+    }
     echo "Application Error: Invalid DB_HOST value\n";
     echo "Use MySQL host from Railway MySQL service (MYSQLHOST), not RAILWAY_PRIVATE_DOMAIN.\n";
+    exit(1);
+}
+
+if ($isRailwayHost && $dbname === '') {
+    error_log('[ERROR] DB_NAME/MYSQLDATABASE is empty for Railway host');
+    http_response_code(503);
+    if (!headers_sent()) {
+        header('Content-Type: text/plain');
+    }
+    echo "Application Error: Database name is not configured\n";
+    echo 'Set DB_NAME to ${{MySQL.MYSQLDATABASE}} in Railway Variables.' . "\n";
     exit(1);
 }
 
