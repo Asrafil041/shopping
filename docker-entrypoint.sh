@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+APP_PORT="${PORT:-80}"
+
 echo "=== PRE-START: Aggressive MPM cleanup ==="
 
 # FORCE DELETE all non-prefork MPM modules before Apache starts
@@ -42,6 +44,22 @@ if [ "$MPM_COUNT" -eq 0 ]; then
     echo "ERROR: No MPM module is enabled. Apache cannot start." >&2
     exit 1
 fi
+
+echo ""
+echo "=== Runtime Apache network config ==="
+echo "Setting Apache to listen on port: ${APP_PORT}"
+
+sed -ri "s/^Listen\s+[0-9]+/Listen ${APP_PORT}/" /etc/apache2/ports.conf
+sed -ri "s#<VirtualHost \*:[0-9]+>#<VirtualHost *:${APP_PORT}>#" /etc/apache2/sites-available/000-default.conf
+
+if grep -q '^ServerName' /etc/apache2/apache2.conf; then
+    sed -ri 's/^ServerName\s+.*/ServerName localhost/' /etc/apache2/apache2.conf
+else
+    echo 'ServerName localhost' >> /etc/apache2/apache2.conf
+fi
+
+echo "Active Listen directives:"
+grep -n '^Listen' /etc/apache2/ports.conf || true
 
 echo ""
 echo "✓ MPM check PASSED — exactly one MPM module (prefork) is enabled."
