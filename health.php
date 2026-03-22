@@ -26,9 +26,22 @@ try {
     $password = getenv('DB_PASS') ?: (getenv('MYSQLPASSWORD') ?: '123223');
     $dbname = getenv('DB_NAME') ?: (getenv('MYSQLDATABASE') ?: 'db_kasir');
 
+    if (strpos($host, '${{') !== false || strpos($host, 'RAILWAY_PRIVATE_DOMAIN') !== false) {
+        $health['status'] = 'error';
+        $health['database']['status'] = 'failed';
+        $health['database']['error'] = 'Invalid DB_HOST placeholder';
+        $health['instructions'][] = "ERROR: DB_HOST is using unresolved placeholder";
+        $health['instructions'][] = "ACTION: Set DB_HOST to MySQL host from Railway MySQL service (MYSQLHOST), not RAILWAY_PRIVATE_DOMAIN";
+        http_response_code(503);
+        echo json_encode($health, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
     error_log("[HEALTH] Attempting DB connection to {$host}");
-    
-    $conn = mysqli_connect($host, $username, $password, $dbname);
+
+    $mysqli = mysqli_init();
+    mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
+    $conn = mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
     
     if ($conn) {
         $health['database']['status'] = 'connected';

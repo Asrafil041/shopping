@@ -8,10 +8,21 @@ $username = getenv('DB_USER') ?: (getenv('MYSQLUSER') ?: "root");
 $password = getenv('DB_PASS') ?: (getenv('MYSQLPASSWORD') ?: "123223");
 $dbname = getenv('DB_NAME') ?: (getenv('MYSQLDATABASE') ?: "db_kasir");
 
+if (strpos($host, '${{') !== false || strpos($host, 'RAILWAY_PRIVATE_DOMAIN') !== false) {
+    error_log("[ERROR] Invalid DB_HOST placeholder detected: {$host}");
+    http_response_code(503);
+    header('Content-Type: text/plain');
+    echo "Application Error: Invalid DB_HOST value\n";
+    echo "Use MySQL host from Railway MySQL service (MYSQLHOST), not RAILWAY_PRIVATE_DOMAIN.\n";
+    exit(1);
+}
+
 // Log connection attempt to stderr for Railway debug
 error_log("[APP] Attempting MySQL connection to {$host}/{$dbname} as user {$username}");
 
-$conn = mysqli_connect($host, $username, $password, $dbname);
+$mysqli = mysqli_init();
+mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
+$conn = mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
 
 if (!$conn) {
     $error = mysqli_connect_error();
