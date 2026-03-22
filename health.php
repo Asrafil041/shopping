@@ -75,6 +75,10 @@ try {
             }
             $health['database']['table_count'] = count($health['database']['tables']);
         }
+
+        if (($health['database']['table_count'] ?? 0) === 0 && $isRailwayHost && $dbname !== 'db_kasir') {
+            $health['instructions'][] = "NOTICE: Current DB has no tables. If schema was imported to db_kasir, set DB_NAME=db_kasir.";
+        }
         
         mysqli_close($conn);
         $health['instructions'][] = "SUCCESS: Database connection successful!";

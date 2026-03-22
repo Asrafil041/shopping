@@ -67,6 +67,34 @@ if (!$connected) {
     exit(1);
 }
 
+if ($isRailwayHost) {
+    $tableCount = 0;
+    $tableResult = mysqli_query($conn, 'SHOW TABLES');
+    if ($tableResult) {
+        $tableCount = mysqli_num_rows($tableResult);
+    }
+
+    if ($tableCount === 0 && $dbname !== 'db_kasir') {
+        $fallbackMysqli = mysqli_init();
+        mysqli_options($fallbackMysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
+        $fallbackConnected = @mysqli_real_connect($fallbackMysqli, $host, $username, $password, 'db_kasir');
+
+        if ($fallbackConnected) {
+            $fallbackTables = mysqli_query($fallbackMysqli, 'SHOW TABLES');
+            $fallbackCount = $fallbackTables ? mysqli_num_rows($fallbackTables) : 0;
+
+            if ($fallbackCount > 0) {
+                mysqli_close($conn);
+                $conn = $fallbackMysqli;
+                $dbname = 'db_kasir';
+                error_log('[APP] Auto-switched database from empty default DB to db_kasir');
+            } else {
+                mysqli_close($fallbackMysqli);
+            }
+        }
+    }
+}
+
 error_log("[APP] MySQL connection successful");
 
 mysqli_set_charset($conn, 'utf8mb4');
