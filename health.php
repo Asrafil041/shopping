@@ -26,6 +26,10 @@ try {
     $password = getenv('DB_PASS') ?: (getenv('MYSQLPASSWORD') ?: '123223');
     $dbname = getenv('DB_NAME') ?: (getenv('MYSQLDATABASE') ?: 'db_kasir');
 
+    $host = trim($host, " \t\n\r\0\x0B\"'");
+    $username = trim($username, " \t\n\r\0\x0B\"'");
+    $dbname = trim($dbname, " \t\n\r\0\x0B\"'");
+
     if (strpos($host, '${{') !== false || strpos($host, 'RAILWAY_PRIVATE_DOMAIN') !== false) {
         $health['status'] = 'error';
         $health['database']['status'] = 'failed';
