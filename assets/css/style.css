@@ -1,0 +1,61 @@
+body {
+    margin: 0;
+    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    background-color: #faf5ff;
+  }
+:root {
+ --primary-color: #198754; /* contoh untuk hijau Bootstrap */
+  --primary-color-hover: #157347;
+  --primary-bg: #0fc2f8;
+}
+.navbar-nav li a{
+    color: #181818 !important;
+}
+.navbar-nav li a:hover{
+  color: var(--primary-color) !important;
+}
+.bg-purple{
+  background: var(--primary-color) !important;
+}
+.btn-purple{
+  background: var(--primary-color) !important;
+  color: #fff !important;
+}
+.btn-purple:hover{
+  background: #fff !important;
+  color: var(--primary-color) !important;
+  border: 1px solid var(--primary-color);
+}
+.btn-purple-light{
+  background: #fff !important;
+  color: var(--primary-color) !important;
+  border: 1px solid var(--primary-color);
+}
+.btn-purple-light:hover{
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  border: 1px solid var(--primary-color);
+}
+.thead-purple{
+  background: var(--primary-color) !important;
+  color: #fff !important;
+}
+.text-purple{
+  color: var(--primary-color) !important;
+}
+.form-control-user{
+  border-radius: 50px;
+}
+.border-0{
+  border: 0px !important;
+}
+.bg-0{
+  background: transparent !important;
+}
+
+.navbar-nav li a.putih{
+  color: #f1f8ff !important;
+}
+.navbar-nav li a.putih:hover{
+  color: #ffffff !important;
+}
