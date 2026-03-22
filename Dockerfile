@@ -1,20 +1,20 @@
 FROM php:8.2-apache-bookworm
 
-# Install PHP extensions and fix MPM configuration in a single RUN layer so
-# Docker cannot cache an intermediate state where mpm_event is still present.
-#
-# Step 1 — install mysqli extension.
-# Step 2 — use `find -type l` to explicitly remove only the mpm_* symlinks
-#           from mods-enabled (rm -f can miss symlinks; find -type l cannot).
-# Step 3 — run a2dismod as a safety net in case any symlinks were re-created.
-# Step 4 — explicitly enable mpm_prefork.
-# Step 5 — list mods-enabled so the build log confirms the final state.
+# Install PHP extensions and fix MPM configuration in a single RUN layer.
+# This ensures Docker cannot cache an intermediate state where multiple MPMs are present.
 RUN docker-php-ext-install mysqli && \
-    find /etc/apache2/mods-enabled \( -type l -name 'mpm_*.load' -o -type l -name 'mpm_*.conf' \) -delete && \
-    a2dismod mpm_event mpm_worker mpm_itk || true && \
+    # Step 1: Remove ALL mpm modules from mods-available (except prefork)
+    find /etc/apache2/mods-available -name 'mpm_*.load' ! -name 'mpm_prefork.load' -delete && \
+    find /etc/apache2/mods-available -name 'mpm_*.conf' ! -name 'mpm_prefork.conf' -delete && \
+    # Step 2: Remove ALL mpm module symlinks from mods-enabled
+    find /etc/apache2/mods-enabled -type l \( -name 'mpm_*.load' -o -name 'mpm_*.conf' \) -delete && \
+    # Step 3: Disable all mpm modules as safety net
+    a2dismod mpm_event mpm_worker mpm_itk mpm_async || true && \
+    # Step 4: Explicitly enable only mpm_prefork
     a2enmod mpm_prefork && \
-    echo "--- mods-enabled after MPM cleanup ---" && \
-    ls -la /etc/apache2/mods-enabled/
+    # Step 5: Verify the result in build logs
+    echo "=== Final MPM state in mods-enabled ===" && \
+    ls -la /etc/apache2/mods-enabled/mpm_* 2>/dev/null || echo "  (only prefork should exist, others deleted)"
 
 # Enable PHP error logging to stdout for debugging
 RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini && \
