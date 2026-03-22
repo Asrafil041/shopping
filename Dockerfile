@@ -2,11 +2,8 @@ FROM php:8.2-apache
 
 RUN docker-php-ext-install mysqli
 
-# Remove ALL mpm modules completely to ensure clean slate
-RUN find /etc/apache2/mods-enabled -name 'mpm_*.load' -delete && \
-    find /etc/apache2/mods-enabled -name 'mpm_*.conf' -delete && \
-    find /etc/apache2/mods-available -name 'mpm_*.load' ! -name 'mpm_prefork.load' -delete && \
-    find /etc/apache2/mods-available -name 'mpm_*.conf' ! -name 'mpm_prefork.conf' -delete && \
+# Ensure only mpm_prefork is active — Apache cannot load more than one MPM
+RUN a2dismod mpm_event mpm_worker mpm_itk 2>/dev/null || true && \
     a2enmod mpm_prefork
 
 COPY . /var/www/html/
