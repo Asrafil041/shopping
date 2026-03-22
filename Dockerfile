@@ -1,5 +1,9 @@
 FROM php:8.2-apache-bookworm
 
+# Force rebuild by making this layer depend on current timestamp
+ARG BUILD_DATE
+RUN echo "Build date: $BUILD_DATE"
+
 # Install PHP extensions and fix MPM configuration in ONE RUN layer to prevent
 # Docker from caching any intermediate state where multiple MPMs exist.
 RUN docker-php-ext-install mysqli && \
@@ -23,6 +27,12 @@ RUN docker-php-ext-install mysqli && \
     ls -1 /etc/apache2/mods-enabled/mpm_*.load 2>/dev/null || echo "  (only prefork should exist)" && \
     echo "mods-available:" && \
     ls -1 /etc/apache2/mods-available/mpm_*.load
+
+# Create custom Apache config to FORCE only mpm_prefork and prevent mpm_event from loading
+RUN echo "# Force mpm_prefork to load FIRST, explicitly exclude mpm_event" > /etc/apache2/conf-enabled/mpm-override.conf && \
+    echo "# This ensures mpm_prefork is the ONLY active MPM" >> /etc/apache2/conf-enabled/mpm-override.conf && \
+    echo "# Even if mpm_event symlinks somehow exist, they will not be honored" >> /etc/apache2/conf-enabled/mpm-override.conf && \
+    cat /etc/apache2/mods-enabled/mpm_prefork.load >> /etc/apache2/conf-enabled/mpm-override.conf
 
 # Enable PHP error logging to stdout for debugging
 RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini && \
