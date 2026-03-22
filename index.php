@@ -81,8 +81,8 @@ $jsArray1 = "var nama_barang = new Array();";
         $tgl   = $_POST['tgl_input'];
 
         // Masukkan hanya satu kali ke tabel keranjang
-        $sql = "INSERT INTO keranjang (kode_barang, nama_barang, harga_barang, quantity, subtotal, tgl_input)
-                VALUES ('$idb', '$nama', '$harga', '$qty', '$total', '$tgl')";
+        $sql = "INSERT INTO keranjang (kode_barang, nama_barang, harga_barang, quantity, subtotal, tgl_input, no_transaksi, bayar, kembalian)
+            VALUES ('$idb', '$nama', '$harga', '$qty', '$total', '$tgl', '', '0', '0')";
 
         $query = mysqli_query($conn, $sql);
 
