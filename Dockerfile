@@ -16,11 +16,20 @@ RUN docker-php-ext-install mysqli && \
     echo "--- mods-enabled after MPM cleanup ---" && \
     ls -la /etc/apache2/mods-enabled/
 
+# Enable PHP error logging to stdout for debugging
+RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini && \
+    echo "display_errors = On" >> /usr/local/etc/php/conf.d/docker-php.ini && \
+    echo "log_errors = On" >> /usr/local/etc/php/conf.d/docker-php.ini && \
+    echo "error_log = /dev/stderr" >> /usr/local/etc/php/conf.d/docker-php.ini && \
+    ln -sf /dev/stdout /var/log/apache2/access.log && \
+    ln -sf /dev/stderr /var/log/apache2/error.log
+
 COPY . /var/www/html/
 COPY docker-entrypoint.sh /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
-    chown -R www-data:www-data /var/www/html
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html
 
 EXPOSE 80
 
