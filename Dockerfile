@@ -1,20 +1,28 @@
 FROM php:8.2-apache-bookworm
 
-# Install PHP extensions and fix MPM configuration in a single RUN layer.
-# This ensures Docker cannot cache an intermediate state where multiple MPMs are present.
+# Install PHP extensions and fix MPM configuration in ONE RUN layer to prevent
+# Docker from caching any intermediate state where multiple MPMs exist.
 RUN docker-php-ext-install mysqli && \
-    # Step 1: Remove ALL mpm modules from mods-available (except prefork)
-    find /etc/apache2/mods-available -name 'mpm_*.load' ! -name 'mpm_prefork.load' -delete && \
-    find /etc/apache2/mods-available -name 'mpm_*.conf' ! -name 'mpm_prefork.conf' -delete && \
-    # Step 2: Remove ALL mpm module symlinks from mods-enabled
-    find /etc/apache2/mods-enabled -type l \( -name 'mpm_*.load' -o -name 'mpm_*.conf' \) -delete && \
-    # Step 3: Disable all mpm modules as safety net
+    # Disable ALL conflicting MPM modules FIRST
     a2dismod mpm_event mpm_worker mpm_itk mpm_async || true && \
-    # Step 4: Explicitly enable only mpm_prefork
+    # Remove mpm_event.load and mpm_event.conf files EXPLICITLY by path
+    rm -fv /etc/apache2/mods-enabled/mpm_event.* && \
+    rm -fv /etc/apache2/mods-enabled/mpm_worker.* && \
+    rm -fv /etc/apache2/mods-enabled/mpm_itk.* && \
+    rm -fv /etc/apache2/mods-enabled/mpm_async.* && \
+    # Remove from mods-available as well to prevent re-enabling
+    rm -fv /etc/apache2/mods-available/mpm_event.* && \
+    rm -fv /etc/apache2/mods-available/mpm_worker.* && \
+    rm -fv /etc/apache2/mods-available/mpm_itk.* && \
+    rm -fv /etc/apache2/mods-available/mpm_async.* && \
+    # NOW enable ONLY mpm-prefork
     a2enmod mpm_prefork && \
-    # Step 5: Verify the result in build logs
-    echo "=== Final MPM state in mods-enabled ===" && \
-    ls -la /etc/apache2/mods-enabled/mpm_* 2>/dev/null || echo "  (only prefork should exist, others deleted)"
+    # Verify the result
+    echo "=== Dockerfile: Final MPM module state ===" && \
+    echo "mods-enabled:" && \
+    ls -1 /etc/apache2/mods-enabled/mpm_*.load 2>/dev/null || echo "  (only prefork should exist)" && \
+    echo "mods-available:" && \
+    ls -1 /etc/apache2/mods-available/mpm_*.load
 
 # Enable PHP error logging to stdout for debugging
 RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini && \
