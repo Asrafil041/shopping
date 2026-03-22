@@ -45,7 +45,8 @@ RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini &
 COPY . /var/www/html/
 COPY docker-entrypoint.sh /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html
 
