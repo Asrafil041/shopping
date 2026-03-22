@@ -41,9 +41,10 @@ try {
 
     $mysqli = mysqli_init();
     mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
-    $conn = mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
+    $connected = mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
     
-    if ($conn) {
+    if ($connected) {
+        $conn = $mysqli;
         $health['database']['status'] = 'connected';
         $health['database']['tables'] = [];
         
