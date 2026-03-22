@@ -5,6 +5,7 @@
  */
 
 header('Content-Type: application/json');
+mysqli_report(MYSQLI_REPORT_OFF);
 
 $health = [
     'status' => 'ok',
