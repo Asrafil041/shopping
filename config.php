@@ -1,6 +1,7 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', '1');
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
 mysqli_report(MYSQLI_REPORT_OFF);
 
 // Database connection
@@ -27,7 +28,7 @@ error_log("[APP] Attempting MySQL connection to {$host}/{$dbname} as user {$user
 
 $mysqli = mysqli_init();
 mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
-$connected = mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
+$connected = @mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
 
 if ($connected) {
     $conn = $mysqli;
@@ -40,7 +41,9 @@ if (!$connected) {
     
     // Don't die immediately, show error page instead
     http_response_code(503);
-    header('Content-Type: text/plain');
+    if (!headers_sent()) {
+        header('Content-Type: text/plain');
+    }
     echo "Application Error: Database Connection Failed\n";
     echo "Error: " . htmlspecialchars($error) . "\n";
     echo "Host: " . htmlspecialchars($host) . "\n";

@@ -4,7 +4,9 @@
  * Akses: https://shopping-production-xxx.up.railway.app/health.php
  */
 
-header('Content-Type: application/json');
+if (!headers_sent()) {
+    header('Content-Type: application/json');
+}
 mysqli_report(MYSQLI_REPORT_OFF);
 
 $health = [
@@ -46,7 +48,7 @@ try {
 
     $mysqli = mysqli_init();
     mysqli_options($mysqli, MYSQLI_OPT_CONNECT_TIMEOUT, 5);
-    $connected = mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
+    $connected = @mysqli_real_connect($mysqli, $host, $username, $password, $dbname);
     
     if ($connected) {
         $conn = $mysqli;
